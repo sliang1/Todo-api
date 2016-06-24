@@ -16,7 +16,7 @@ app.get('/', function (req, res)  {
 
 });
 
-// GET /todos?completed=true
+// GET /todos?completed=true&q=work
 app.get('/todos', function (req,res) {
 
 	var queryParams = req.query;
@@ -24,9 +24,16 @@ app.get('/todos', function (req,res) {
 
 	if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'true') {
 		filteredTodos = _.where(todos, {completed: true});
-	} else if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'false') {
+	} else if (queryParams.hasOwnProperty('completed') && queryParams.q === 'false') {
 		filteredTodos = _.where(todos, {completed: false});
 	}
+
+	if (queryParams.hasOwnProperty('q') && queryParams.q.length > 0 ) {
+		filteredTodos = _.filter(filteredTodos, function (todo) {
+			return todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1;
+
+		});
+	} 
 
 	res.json(filteredTodos);
 });
@@ -45,8 +52,9 @@ app.get('/todos/:id', function (req,res) {
 	// res.send("Asking for todo with id of " + req.params.id);
 });
 
-//POST /todos/:id
 
+
+//POST /todos/:id
 app.post('/todos', function (req,res) {
      var body = req.body;
      
