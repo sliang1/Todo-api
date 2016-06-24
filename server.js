@@ -16,9 +16,19 @@ app.get('/', function (req, res)  {
 
 });
 
-// GET /todos
-app.get('/todos', function(req,res) {
-	res.json(todos);
+// GET /todos?completed=true
+app.get('/todos', function (req,res) {
+
+	var queryParams = req.query;
+	var filteredTodos = todos;
+
+	if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'true') {
+		filteredTodos = _.where(todos, {completed: true});
+	} else if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'false') {
+		filteredTodos = _.where(todos, {completed: false});
+	}
+
+	res.json(filteredTodos);
 });
 
 // GET /todos/:id
@@ -26,13 +36,6 @@ app.get('/todos', function(req,res) {
 app.get('/todos/:id', function (req,res) {
 	var todoId = parseInt(req.params.id,10);     //any request parameter is always a string
 	var matchedTodo = _.findWhere(todos, {id: todoId});
-
-    // var matchedTodo;
-	// for (var i = 0; i < todos.length; i++  )  {
-	// 	if (todos[i].id === todoId) {
-	// 		matchedTodo = todos[i];
-	// 	}
-	// }
 
 	if ( typeof matchedTodo === 'undefined' ) {
 		res.status(404).send();
@@ -79,6 +82,39 @@ app.delete('/todos/:id', function (req,res) {
 
 	
 });
+
+
+//PUT /todos/:id
+app.put('/todos/:id', function (req,res) {
+  var todoId = parseInt(req.params.id, 10);     
+  var matchedTodo = _.findWhere(todos, {id: todoId});
+  var body = _.pick(req.body, 'description', 'completed');
+
+  var validAttributes = {};
+
+
+
+  if (!matchedTodo) {
+		return res.status(404).send();
+	} 
+
+  if (body.hasOwnProperty('completed')&& _.isBoolean(body.completed)) {
+  	validAttributes.completed = body.completed;
+  } else if (body.hasOwnProperty('completed')) {
+  	return res.status(400).send();
+  }
+
+  if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
+  	validAttributes.description = body.description;
+  } else if (body.hasOwnProperty('description')) {
+  	return res.status(400).send();
+  }
+
+  _.extend(matchedTodo,validAttributes);
+  res.json(matchedTodo);
+
+});
+
 
 
 
