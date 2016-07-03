@@ -1,6 +1,7 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('underscore');
+var db = require('./db.js');
 
 var app = express();
 var PORT = process.env.PORT ||3000;
@@ -15,6 +16,7 @@ app.get('/', function (req, res)  {
 	res.send('Todo API Root');
 
 });
+
 
 // GET /todos?completed=true&q=work
 app.get('/todos', function (req,res) {
@@ -38,8 +40,8 @@ app.get('/todos', function (req,res) {
 	res.json(filteredTodos);
 });
 
-// GET /todos/:id
 
+// GET /todos/:id
 app.get('/todos/:id', function (req,res) {
 	var todoId = parseInt(req.params.id,10);     //any request parameter is always a string
 	var matchedTodo = _.findWhere(todos, {id: todoId});
@@ -54,29 +56,35 @@ app.get('/todos/:id', function (req,res) {
 
 
 
-//POST /todos/:id
+//POST /todos
 app.post('/todos', function (req,res) {
      var body = req.body;
      
      body = _.pick(body, 'description', 'completed');
 
+     db.todo.create(body).then(function (todo) {
+     		res.json(todo.toJSON());
+     },function (e) {
+     		res.status(400).json(e);
+     });
 
-     if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length ===0) {
-     	return res.status(400).send();
-     } 
+
+     // if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length ===0) {
+     // 	return res.status(400).send();
+     // } 
 
 
-     body.description = body.description.trim();
-     body.id = todoNextId++;
+     // body.description = body.description.trim();
+     // body.id = todoNextId++;
 
-     todos.push(body);
+     // todos.push(body);
 
-     res.json(body);
+     // res.json(body);
 
 });
 
-//DELETE /todos/:id
 
+//DELETE /todos/:id
 app.delete('/todos/:id', function (req,res) {
 	var todoId = parseInt(req.params.id,10);     //any request parameter is always a string
 	var matchedTodo = _.findWhere(todos, {id: todoId});
@@ -124,19 +132,14 @@ app.put('/todos/:id', function (req,res) {
 });
 
 
-
-
-app.listen(PORT, function () {
-	console.log('Express listening on port ' + PORT + '!');
+db.sequelize.sync().then(function () {
+	app.listen(PORT, function () {
+		console.log('Express listening on port ' + PORT + '!');
+	});
 });
 
-var test;
 
-if(test) {
-	console.log('todo is there');
-} else {
-	console.log('false');
-}
+
 
 
 
