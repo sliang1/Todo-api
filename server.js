@@ -44,13 +44,25 @@ app.get('/todos', function (req,res) {
 // GET /todos/:id
 app.get('/todos/:id', function (req,res) {
 	var todoId = parseInt(req.params.id,10);     //any request parameter is always a string
-	var matchedTodo = _.findWhere(todos, {id: todoId});
 
-	if ( typeof matchedTodo === 'undefined' ) {
-		res.status(404).send();
-	} else {
-		res.json(matchedTodo);
-	}
+    db.todo.findById(todoId).then (function (todo) {
+    	if(!!todo) {
+    		res.json(todo.toJSON());
+    	} else {
+    		res.status(404).send();
+    	}
+    }, function (e){
+    	res.status(500).send();
+    });
+
+
+	// var matchedTodo = _.findWhere(todos, {id: todoId});
+
+	// if ( typeof matchedTodo === 'undefined' ) {
+	// 	res.status(404).send();
+	// } else {
+	// 	res.json(matchedTodo);
+	// }
 	// res.send("Asking for todo with id of " + req.params.id);
 });
 
